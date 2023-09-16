@@ -1,0 +1,72 @@
+version: "3.3"
+
+networks:
+  traefiknet:
+    name: traefiknet
+
+secrets:
+    HETZNER_API_KEY: 
+        file: ./secrets/HETZNER_API_KEY.secret
+
+services:
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - --log.level=DEBUG
+      #- --api.insecure=true
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+      - --certificatesresolvers.myresolver.acme.dnschallenge=true
+      - --certificatesresolvers.myresolver.acme.dnschallenge.provider=hetzner
+      #- --certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.myresolver.acme.email=virtual.employee@gmail.com
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+      #- 8080:8080
+    secrets:
+      - HETZNER_API_KEY
+    environment:
+      - HETZNER_API_KEY_FILE=/run/secrets/HETZNER_API_KEY
+      - password
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks: 
+      - traefiknet
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.tls.certresolver=myresolver
+      #- traefik.http.routers.traefik.tls.domains[0].main=*.luigicastro.pro
+           #Define Dashboard
+      - traefik.http.routers.traefik.rule=Host(`luigicastro.pro`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=traefik-auth
+      - traefik.http.middlewares.traefik-auth.basicauth.users=squeige:${password} 
+
+#  whoami:
+#    image: traefik/whoami
+#    container_name: whoami1
+#    networks: 
+#      - traefiknet
+#
+#    labels:
+#      - traefik.enable=true
+#      - traefik.http.routers.whoami1.rule=Host(`whoami1.luigicastro.pro`)
+#      - traefik.http.routers.whoami1.entrypoints=websecure
+#      - traefik.http.routers.whoami1.tls.certresolver=myresolver

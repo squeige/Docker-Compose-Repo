@@ -1,0 +1,5 @@
+nginx/data/ 
+traefik/.env 
+traefik/letsencrypt/ 
+traefik/secrets/
+vwarden/vw-data/

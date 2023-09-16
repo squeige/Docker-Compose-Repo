@@ -1,0 +1,25 @@
+version: "3.3"
+
+networks:
+  traefiknet:
+     external: true
+
+services:
+
+  vwarden:
+     image: vaultwarden/server:latest
+     container_name: vwarden 
+     networks:
+       - traefiknet
+     volumes:
+       - ./vw-data/:/data/
+     environment:
+       - LOG_LEVEL=debug
+     labels:
+       - traefik.enable=true
+       - traefik.http.routers.vwarden.tls=true
+       - traefik.http.routers.vwarden.rule=Host(`vwarden.luigicastro.pro`)
+       - traefik.http.routers.vwarden.entrypoints=websecure
+       - traefik.http.routers.vwarden.tls.certresolver=myresolver
+       - traefik.http.services.vwarden.loadbalancer.server.port=80
+     restart: unless-stopped

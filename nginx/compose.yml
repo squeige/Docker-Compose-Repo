@@ -1,0 +1,24 @@
+version: "3.3"
+
+networks:
+  traefiknet:
+     external: true
+
+services:
+    
+  nginx:
+     image: nginx:alpine
+     container_name: nginx
+     networks:
+       - traefiknet
+     volumes:
+       - ./data/html:/usr/share/nginx/html/:ro
+       - ./data/default.conf:/etc/nginx/conf.d/default.conf:ro
+     labels:
+       - traefik.enable=true
+       - traefik.http.routers.nginx.tls=true
+       - traefik.http.routers.nginx.rule=Host(`luigicastro.pro`)
+       - traefik.http.routers.nginx.entrypoints=websecure
+       - traefik.http.services.nginx.loadbalancer.server.port=80
+       - traefik.http.routers.nginx.tls.certresolver=myresolver
+     restart: unless-stopped
