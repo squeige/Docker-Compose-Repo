@@ -58,15 +58,4 @@ services:
       - traefik.http.routers.traefik.service=api@internal
       - traefik.http.routers.traefik.middlewares=traefik-auth
       - traefik.http.middlewares.traefik-auth.basicauth.users=squeige:${password} 
-
-#  whoami:
-#    image: traefik/whoami
-#    container_name: whoami1
-#    networks: 
-#      - traefiknet
-#
-#    labels:
-#      - traefik.enable=true
-#      - traefik.http.routers.whoami1.rule=Host(`whoami1.luigicastro.pro`)
-#      - traefik.http.routers.whoami1.entrypoints=websecure
-#      - traefik.http.routers.whoami1.tls.certresolver=myresolver
+    restart: unless-stopped
